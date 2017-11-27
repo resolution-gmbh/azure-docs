@@ -315,6 +315,44 @@ In this section, you test your Azure AD single sign-on configuration using the A
 When you click the SAML SSO for Confluence by resolution GmbH tile in the Access Panel, you should get automatically signed-on to your SAML SSO for Confluence by resolution GmbH application.
 For more information about the Access Panel, see [introduction to the Access Panel](active-directory-saas-access-panel-introduction.md). 
 
+### Just-in-time provisioning (Optional)
+
+With just-in-time provisioning, any user is provisioned (created or updated) at the Confluence internal directory the first time the user tries to access the SAML Single Sign On, without the need for prior identity provisioning activity between Azure AD and the SAML Single Sign On in Confluence.
+
+Azure AD can include attributes in the SAML assertion needed by the SAML Single Sign On for provisioning. In the following we like to show up our recommended way to map the attributes from the SAML assertion to the SAML Single Sign On add-on for provisioning:
+
+* Confluence Username
+NameID (which is part of the SAML Response Subject) -> Userid 
+The SAML Single Sign On takes automatically the Name ID, if no attribute is configured for userid.
+
+Azure AD provides the userid (UPN) as email address. If you don’t like the email address format, you can use the Userid Transformation, a feature by the SAML SSO add-on, which can transform an email address to a possible Confluence username, e.g. “testuser@azuread.lab.resolution.de" to “testuser”.
+() -> 
+
+* Confluence Fullname
+http://schemas.microsoft.com/identity/claims/displayname (e.g. “Jörg Brandstätt”) -> Full Name
+  
+* Confluence Email-Address
+http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name (e.g. “jb@azuread.lab.resolution.de”) -> Email
+
+* Confluence Groups
+Group object ids can be sent as claim. They are not part of the SAML assertion by default. Following configurations needs to be applied to enable them:
+* Login to https://portal.azure.com
+* Goto Azure Active Directory -> App registrations -> Select your SAML Single Sign On application -> Manifest (Edit button).
+* Download -> “Download manifest” to get a backup file.
+* Change the line "groupMembershipClaims": null to "groupMembershipClaims": “SecurityGroup” (groups claim will contain the identifiers of all security groups of which the user is a member) or "groupMembershipClaims": “All” (groups claim will contain the identifiers of all security groups and all distribution lists of which the user is a member)
+* Save the manifest.
+
+That’s all required configurations on the manifest. Now the group attribute needs to be mapped:
+http://schemas.microsoft.com/ws/2008/06/identity/claims/groups -> Group
+
+* User Groups
+In addition to the groups from the SAML Response, each users can also be added during SSO
+to the defined groups in the “User Groups” field (SAML SingleSignOn Plugin Configuration -> Identity Provider -> Group Settings). This field is necessary, if you like to add your users to a specific group, which is not existent in Azure, so they get access permission for Confluence (e.g. confluence-users).
+
+All recommended configurations are done. A screenshot as final configuration collection:
+
+
+
 ## Additional resources
 
 * [List of Tutorials on How to Integrate SaaS Apps with Azure Active Directory](active-directory-saas-tutorial-list.md)
